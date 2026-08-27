@@ -1,0 +1,7 @@
+feedparser==6.0.11
+gspread==6.1.4
+google-auth==2.35.0
+pysentimiento==0.7.3
+transformers==4.44.2
+torch==2.4.1
+pytz==2024.2
