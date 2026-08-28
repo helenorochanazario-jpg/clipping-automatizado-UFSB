@@ -1,0 +1,32 @@
+name: Clipping Institucional UFSB
+
+on:
+  schedule:
+    # 08h e 18h no horário da Bahia (UTC-3) = 11h e 21h UTC
+    - cron: "0 11 * * *"
+    - cron: "0 21 * * *"
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions"
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Executar coleta
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          UFSB_SPREADSHEET_ID: ${{ secrets.UFSB_SPREADSHEET_ID }}
+        run: python collector.py
