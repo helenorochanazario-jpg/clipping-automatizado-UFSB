@@ -31,4 +31,4 @@ SENTIMENT_LANG = "pt"
 # Nome da aba (worksheet) dentro da planilha do Google Sheets onde os
 # dados serão gravados. Pode ser alterado via variável de ambiente
 # UFSB_SHEET_NAME no workflow, se preferir.
-DEFAULT_SHEET_NAME = "clipping tratado"
+DEFAULT_SHEET_NAME = "Clipping"
