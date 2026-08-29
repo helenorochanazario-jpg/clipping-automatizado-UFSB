@@ -14,7 +14,8 @@ SEARCH_TERMS = [
     "Universidade Federal do Sul da Bahia",
     "Campus Sosígenes Costa",
     "Campus Jorge Amado",
-    "Campus Paulo Freire UFSB",
+    "Campus Paulo Freire",
+    "Campus Maria Felipa"
 ]
 
 # Nomes e cargos da UFSB a serem identificados no texto das publicações.
