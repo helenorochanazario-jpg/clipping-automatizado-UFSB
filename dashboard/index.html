@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipping Institucional · ACS UFSB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --navy: #002878;
+    --navy-deep: #051538;
+    --ink: #101B33;
+    --blue: #1C6DD0;
+    --blue-pale: #E4EEFB;
+    --yellow: #FFC72C;
+    --yellow-ink: #8A6300;
+    --green: #12946B;
+    --green-pale: #DFF5EC;
+    --coral: #FF6B54;
+    --coral-pale: #FFE7E2;
+    --bg: #F5F8FC;
+    --card: #FFFFFF;
+    --line: #DCE6F2;
+    --muted: #5C6B85;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'PT Sans', sans-serif;
+    padding-bottom: 60px;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+  }
+
+  header.top {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color: #fff;
+    padding: 28px clamp(16px, 4vw, 48px) 22px;
+  }
+  header.top .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9FC0F0;
+    font-weight: 700;
+  }
+  header.top h1 {
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  header.top p.sub {
+    color: #C4D8F4;
+    margin: 6px 0 0;
+    font-size: 14px;
+  }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 48px);
+  }
+
+  /* --- Maré do Sentimento (signature element) --- */
+  section.mare {
+    margin-top: -18px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px -18px rgba(0, 40, 120, 0.35);
+    padding: 20px clamp(16px, 3vw, 28px);
+    position: relative;
+    overflow: hidden;
+  }
+  .mare-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .mare-head h2 { font-size: 16px; font-weight: 600; }
+  .mare-head .pct { font-size: 13px; color: var(--muted); }
+  .mare-svg { width: 100%; height: 46px; display: block; }
+  .wave-a { animation: drift 9s linear infinite; }
+  .wave-b { animation: drift 13s linear infinite reverse; opacity: 0.55; }
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-200px); }
+  }
+  .mare-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .mare-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* --- Cards de resumo --- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+  @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+  }
+  .stat .num { font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700; }
+  .stat .lbl { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .stat.positivo .num { color: var(--green); }
+  .stat.neutro .num { color: var(--yellow-ink); }
+  .stat.negativo .num { color: var(--coral); }
+
+  /* --- Filtros --- */
+  .filters {
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .filters label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 3px; }
+  .filters select, .filters input {
+    font-family: 'PT Sans', sans-serif;
+    font-size: 13.5px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    min-width: 150px;
+  }
+  .filters input[type="search"] { min-width: 200px; }
+  .filters .reset {
+    border: none;
+    background: var(--blue-pale);
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+  .filters .reset:hover { background: #d3e4fa; }
+
+  /* --- Gráficos --- */
+  .charts {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  @media (max-width: 860px) { .charts { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .panel canvas { max-height: 260px; }
+
+  .rank {
+    margin-top: 14px;
+  }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    padding: 5px 0;
+  }
+  .rank-row .name { width: 150px; flex-shrink: 0; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-row .bar-track { flex: 1; background: var(--blue-pale); border-radius: 6px; height: 8px; overflow: hidden; }
+  .rank-row .bar-fill { height: 100%; background: var(--blue); border-radius: 6px; }
+  .rank-row .count { width: 24px; text-align: right; color: var(--muted); }
+
+  /* --- Tabela --- */
+  .table-wrap {
+    margin-top: 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px 0;
+  }
+  .table-head h3 { font-size: 14px; font-weight: 600; }
+  .table-head .count { font-size: 12.5px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13.5px; }
+  thead th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody td { padding: 10px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:hover { background: #FAFCFF; }
+  td.titulo a { color: var(--navy); font-weight: 700; text-decoration: none; }
+  td.titulo a:hover { text-decoration: underline; }
+  td.data { white-space: nowrap; color: var(--muted); }
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .tag.positivo { background: var(--green-pale); color: var(--green); }
+  .tag.neutro { background: #FFF3D6; color: var(--yellow-ink); }
+  .tag.negativo { background: var(--coral-pale); color: var(--coral); }
+  .pager { display: flex; justify-content: center; gap: 6px; padding: 16px; }
+  .pager button {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .pager button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* --- Estado vazio / carregamento --- */
+  .state {
+    margin-top: 40px;
+    text-align: center;
+    padding: 50px 20px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px dashed var(--line);
+    color: var(--muted);
+  }
+  .state h3 { color: var(--ink); font-size: 16px; margin-bottom: 8px; }
+  .state input[type="file"] { margin-top: 14px; }
+  .state code {
+    background: var(--blue-pale);
+    color: var(--navy);
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 12.5px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 34px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="eyebrow">Assessoria de Comunicação Social · UFSB</div>
+  <h1>Clipping Institucional</h1>
+  <p class="sub">Monitoramento automático de menções à Universidade Federal do Sul da Bahia na imprensa e nas redes — atualizado <span id="lastUpdate">—</span></p>
+</header>
+
+<main>
+
+  <section class="mare">
+    <div class="mare-head">
+      <h2>🌊 Maré do sentimento</h2>
+      <span class="pct" id="marePct">—</span>
+    </div>
+    <svg class="mare-svg" viewBox="0 0 800 46" preserveAspectRatio="none" id="mareSvg">
+      <defs>
+        <linearGradient id="mareGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#FF6B54"/>
+          <stop offset="50%" stop-color="#FFC72C"/>
+          <stop offset="100%" stop-color="#12946B"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="800" height="46" fill="#EEF3FA" rx="6"/>
+      <clipPath id="mareClip"><rect id="mareClipRect" x="0" y="0" width="0" height="46"/></clipPath>
+      <g clip-path="url(#mareClip)">
+        <rect x="0" y="0" width="800" height="46" fill="url(#mareGrad)"/>
+        <path class="wave-a" d="M0,10 Q25,0 50,10 T100,10 T150,10 T200,10 T250,10 T300,10 T350,10 T400,10 T450,10 T500,10 T550,10 T600,10 T650,10 T700,10 T750,10 T800,10 T850,10 T900,10 T950,10 T1000,10 V46 H0 Z" fill="rgba(255,255,255,0.18)"/>
+        <path class="wave-b" d="M0,16 Q25,6 50,16 T100,16 T150,16 T200,16 T250,16 T300,16 T350,16 T400,16 T450,16 T500,16 T550,16 T600,16 T650,16 T700,16 T750,16 T800,16 T850,16 T900,16 T950,16 T1000,16 V46 H0 Z" fill="rgba(255,255,255,0.14)"/>
+      </g>
+    </svg>
+    <div class="mare-legend">
+      <span><i class="dot" style="background:#FF6B54"></i>Maré baixa = mais negativo</span>
+      <span><i class="dot" style="background:#FFC72C"></i>Neutro</span>
+      <span><i class="dot" style="background:#12946B"></i>Maré alta = mais positivo</span>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Publicações no período</div></div>
+    <div class="stat positivo"><div class="num" id="statPos">0%</div><div class="lbl">Positivas</div></div>
+    <div class="stat neutro"><div class="num" id="statNeu">0%</div><div class="lbl">Neutras</div></div>
+    <div class="stat negativo"><div class="num" id="statNeg">0%</div><div class="lbl">Negativas</div></div>
+  </section>
+
+  <section class="filters">
+    <div>
+      <label for="fSentimento">Sentimento</label>
+      <select id="fSentimento"><option value="">Todos</option><option value="positivo">Positivo</option><option value="neutro">Neutro</option><option value="negativo">Negativo</option></select>
+    </div>
+    <div>
+      <label for="fVeiculo">Veículo/Perfil</label>
+      <select id="fVeiculo"><option value="">Todos</option></select>
+    </div>
+    <div>
+      <label for="fPessoa">Pessoa citada</label>
+      <select id="fPessoa"><option value="">Todas</option></select>
+    </div>
+    <div>
+      <label for="fBusca">Buscar no título</label>
+      <input type="search" id="fBusca" placeholder="ex.: vestibular, pesquisa...">
+    </div>
+    <button class="reset" id="btnReset">Limpar filtros</button>
+  </section>
+
+  <section class="charts">
+    <div class="panel">
+      <h3>Distribuição de sentimento</h3>
+      <canvas id="chartDonut"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Publicações ao longo do tempo</h3>
+      <canvas id="chartLine"></canvas>
+    </div>
+  </section>
+
+  <section class="charts">
+    <div class="panel">
+      <h3>Veículos/perfis mais frequentes</h3>
+      <div class="rank" id="rankVeiculos"></div>
+    </div>
+    <div class="panel">
+      <h3>Pessoas da UFSB mais citadas</h3>
+      <div class="rank" id="rankPessoas"></div>
+    </div>
+  </section>
+
+  <section class="table-wrap" id="tableSection" style="display:none;">
+    <div class="table-head">
+      <h3>Publicações</h3>
+      <span class="count" id="tableCount"></span>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Data/Hora</th><th>Veículo/Perfil</th><th>Título</th><th>Pessoas citadas</th><th>Sentimento</th></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="pager" id="pager"></div>
+  </section>
+
+  <section class="state" id="emptyState">
+    <h3>Nenhum dado carregado ainda</h3>
+    <p>
+      Publique a aba da planilha como CSV (Arquivo → Compartilhar → Publicar na web → escolha a aba → formato CSV)
+      e cole o link na constante <code>SHEET_CSV_URL</code> no topo do arquivo <code>dashboard/index.html</code>.
+      Enquanto isso, você pode carregar um CSV manualmente para testar:
+    </p>
+    <input type="file" id="fileInput" accept=".csv">
+  </section>
+
+</main>
+
+<footer>Painel estático — hospedado gratuitamente via GitHub Pages · Dados: Google Sheets</footer>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO — cole aqui o link de publicação CSV da planilha
+// (Arquivo → Compartilhar → Publicar na web → aba desejada → CSV)
+// ============================================================
+const SHEET_CSV_URL = ""; // ex.: "https://docs.google.com/spreadsheets/d/e/SEU_ID/pub?gid=0&single=true&output=csv"
+
+const COL = {
+  data: "Data/Hora",
+  veiculo: "Veículo/Perfil",
+  titulo: "Título",
+  link: "Link",
+  pessoas: "Pessoas UFSB citadas",
+  sentimento: "Sentimento",
+};
+
+let ALL_ROWS = [];
+let FILTERED = [];
+let PAGE = 1;
+const PAGE_SIZE = 15;
+let donutChart, lineChart;
+
+function normSentiment(v) {
+  const s = (v || "").trim().toLowerCase();
+  if (s.startsWith("pos")) return "positivo";
+  if (s.startsWith("neg")) return "negativo";
+  return "neutro";
+}
+
+function parseDate(str) {
+  // formato dd/mm/aaaa hh:mm
+  const m = (str || "").match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
+  if (!m) return null;
+  return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]);
+}
+
+function loadFromCsvText(csvText) {
+  const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+  ALL_ROWS = parsed.data
+    .filter(r => r[COL.titulo])
+    .map(r => ({
+      data: r[COL.data] || "",
+      dateObj: parseDate(r[COL.data]),
+      veiculo: r[COL.veiculo] || "Não identificado",
+      titulo: r[COL.titulo] || "",
+      link: r[COL.link] || "#",
+      pessoas: (r[COL.pessoas] || "").trim(),
+      sentimento: normSentiment(r[COL.sentimento]),
+    }));
+  document.getElementById("emptyState").style.display = ALL_ROWS.length ? "none" : "block";
+  document.getElementById("tableSection").style.display = ALL_ROWS.length ? "block" : "none";
+  populateFilterOptions();
+  document.getElementById("lastUpdate").textContent = new Date().toLocaleString("pt-BR");
+  applyFilters();
+}
+
+function populateFilterOptions() {
+  const veiculos = [...new Set(ALL_ROWS.map(r => r.veiculo))].sort();
+  const pessoasSet = new Set();
+  ALL_ROWS.forEach(r => r.pessoas.split(",").map(p => p.trim()).filter(Boolean).forEach(p => pessoasSet.add(p)));
+
+  const selV = document.getElementById("fVeiculo");
+  selV.innerHTML = '<option value="">Todos</option>' + veiculos.map(v => `<option value="${v}">${v}</option>`).join("");
+
+  const selP = document.getElementById("fPessoa");
+  selP.innerHTML = '<option value="">Todas</option>' + [...pessoasSet].sort().map(p => `<option value="${p}">${p}</option>`).join("");
+}
+
+function applyFilters() {
+  const sSent = document.getElementById("fSentimento").value;
+  const sVei = document.getElementById("fVeiculo").value;
+  const sPes = document.getElementById("fPessoa").value;
+  const sBusca = document.getElementById("fBusca").value.trim().toLowerCase();
+
+  FILTERED = ALL_ROWS.filter(r => {
+    if (sSent && r.sentimento !== sSent) return false;
+    if (sVei && r.veiculo !== sVei) return false;
+    if (sPes && !r.pessoas.split(",").map(p => p.trim()).includes(sPes)) return false;
+    if (sBusca && !r.titulo.toLowerCase().includes(sBusca)) return false;
+    return true;
+  });
+
+  PAGE = 1;
+  renderStats();
+  renderMare();
+  renderCharts();
+  renderRankings();
+  renderTable();
+}
+
+function renderStats() {
+  const total = FILTERED.length;
+  const pos = FILTERED.filter(r => r.sentimento === "positivo").length;
+  const neu = FILTERED.filter(r => r.sentimento === "neutro").length;
+  const neg = FILTERED.filter(r => r.sentimento === "negativo").length;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statPos").textContent = total ? Math.round((pos / total) * 100) + "%" : "0%";
+  document.getElementById("statNeu").textContent = total ? Math.round((neu / total) * 100) + "%" : "0%";
+  document.getElementById("statNeg").textContent = total ? Math.round((neg / total) * 100) + "%" : "0%";
+}
+
+function renderMare() {
+  const total = FILTERED.length;
+  const pos = FILTERED.filter(r => r.sentimento === "positivo").length;
+  const neg = FILTERED.filter(r => r.sentimento === "negativo").length;
+  // índice de 0 (só negativo) a 100 (só positivo), neutro fica no meio
+  const score = total ? Math.round(((pos - neg) / total) * 50 + 50) : 50;
+  const width = Math.max(4, (score / 100) * 800);
+  document.getElementById("mareClipRect").setAttribute("width", width);
+  document.getElementById("marePct").textContent = total ? `Índice de maré: ${score}/100` : "sem dados no período";
+}
+
+function renderCharts() {
+  const pos = FILTERED.filter(r => r.sentimento === "positivo").length;
+  const neu = FILTERED.filter(r => r.sentimento === "neutro").length;
+  const neg = FILTERED.filter(r => r.sentimento === "negativo").length;
+
+  const donutCtx = document.getElementById("chartDonut");
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(donutCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Positivo", "Neutro", "Negativo"],
+      datasets: [{ data: [pos, neu, neg], backgroundColor: ["#12946B", "#FFC72C", "#FF6B54"], borderWidth: 0 }],
+    },
+    options: {
+      plugins: { legend: { position: "bottom", labels: { font: { family: "PT Sans" }, boxWidth: 10 } } },
+      cutout: "62%",
+    },
+  });
+
+  // linha do tempo (agrupado por dia)
+  const byDay = {};
+  FILTERED.forEach(r => {
+    if (!r.dateObj) return;
+    const key = r.dateObj.toLocaleDateString("pt-BR");
+    byDay[key] = byDay[key] || { positivo: 0, neutro: 0, negativo: 0 };
+    byDay[key][r.sentimento]++;
+  });
+  const days = Object.keys(byDay).sort((a, b) => {
+    const [da, ma, ya] = a.split("/"); const [db, mb, yb] = b.split("/");
+    return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+  });
+
+  const lineCtx = document.getElementById("chartLine");
+  if (lineChart) lineChart.destroy();
+  lineChart = new Chart(lineCtx, {
+    type: "line",
+    data: {
+      labels: days,
+      datasets: [
+        { label: "Positivo", data: days.map(d => byDay[d].positivo), borderColor: "#12946B", backgroundColor: "#12946B", tension: 0.35 },
+        { label: "Neutro", data: days.map(d => byDay[d].neutro), borderColor: "#E0A800", backgroundColor: "#E0A800", tension: 0.35 },
+        { label: "Negativo", data: days.map(d => byDay[d].negativo), borderColor: "#FF6B54", backgroundColor: "#FF6B54", tension: 0.35 },
+      ],
+    },
+    options: {
+      plugins: { legend: { position: "bottom", labels: { font: { family: "PT Sans" }, boxWidth: 10 } } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+}
+
+function renderRankings() {
+  const countBy = (arr, keyFn) => {
+    const map = {};
+    arr.forEach(r => {
+      const keys = keyFn(r);
+      keys.forEach(k => { if (k) map[k] = (map[k] || 0) + 1; });
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  };
+
+  const veiculos = countBy(FILTERED, r => [r.veiculo]);
+  const pessoas = countBy(FILTERED, r => r.pessoas.split(",").map(p => p.trim()).filter(Boolean));
+
+  const maxV = veiculos.length ? veiculos[0][1] : 1;
+  const maxP = pessoas.length ? pessoas[0][1] : 1;
+
+  document.getElementById("rankVeiculos").innerHTML = veiculos.length
+    ? veiculos.map(([name, count]) => rankRow(name, count, maxV)).join("")
+    : `<p style="color:var(--muted);font-size:13px;">Sem dados no período selecionado.</p>`;
+
+  document.getElementById("rankPessoas").innerHTML = pessoas.length
+    ? pessoas.map(([name, count]) => rankRow(name, count, maxP)).join("")
+    : `<p style="color:var(--muted);font-size:13px;">Nenhuma pessoa identificada no período.</p>`;
+}
+
+function rankRow(name, count, max) {
+  const pct = Math.max(6, Math.round((count / max) * 100));
+  return `<div class="rank-row"><span class="name" title="${name}">${name}</span><span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span><span class="count">${count}</span></div>`;
+}
+
+function renderTable() {
+  const totalPages = Math.max(1, Math.ceil(FILTERED.length / PAGE_SIZE));
+  PAGE = Math.min(PAGE, totalPages);
+  const start = (PAGE - 1) * PAGE_SIZE;
+  const pageRows = FILTERED
+    .slice()
+    .sort((a, b) => (b.dateObj || 0) - (a.dateObj || 0))
+    .slice(start, start + PAGE_SIZE);
+
+  document.getElementById("tableCount").textContent = `${FILTERED.length} publicação(ões)`;
+  document.getElementById("tableBody").innerHTML = pageRows.map(r => `
+    <tr>
+      <td class="data">${r.data}</td>
+      <td>${r.veiculo}</td>
+      <td class="titulo"><a href="${r.link}" target="_blank" rel="noopener">${r.titulo}</a></td>
+      <td>${r.pessoas || "—"}</td>
+      <td><span class="tag ${r.sentimento}">${r.sentimento}</span></td>
+    </tr>
+  `).join("");
+
+  const pager = document.getElementById("pager");
+  pager.innerHTML = "";
+  for (let p = 1; p <= totalPages; p++) {
+    const btn = document.createElement("button");
+    btn.textContent = p;
+    if (p === PAGE) btn.classList.add("active");
+    btn.onclick = () => { PAGE = p; renderTable(); };
+    pager.appendChild(btn);
+  }
+}
+
+document.getElementById("fSentimento").addEventListener("change", applyFilters);
+document.getElementById("fVeiculo").addEventListener("change", applyFilters);
+document.getElementById("fPessoa").addEventListener("change", applyFilters);
+document.getElementById("fBusca").addEventListener("input", applyFilters);
+document.getElementById("btnReset").addEventListener("click", () => {
+  document.getElementById("fSentimento").value = "";
+  document.getElementById("fVeiculo").value = "";
+  document.getElementById("fPessoa").value = "";
+  document.getElementById("fBusca").value = "";
+  applyFilters();
+});
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => loadFromCsvText(evt.target.result);
+  reader.readAsText(file, "UTF-8");
+});
+
+// Carrega automaticamente se a URL de publicação estiver configurada
+if (SHEET_CSV_URL) {
+  fetch(SHEET_CSV_URL)
+    .then(res => res.text())
+    .then(loadFromCsvText)
+    .catch(() => { document.getElementById("emptyState").style.display = "block"; });
+}
+</script>
+</body>
+</html>
